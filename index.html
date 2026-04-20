@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Love Catcher 💖</title>
+
+<style>
+body {
+  margin: 0;
+  background: #ffeef3;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.app {
+  width: 360px;
+  background: #ffccd5;
+  border-radius: 30px;
+  padding: 15px;
+  text-align: center;
+}
+
+/* PAGE SYSTEM */
+.page{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+}
+
+#gameScreen{ display:flex; }
+
+/* MACHINE */
+.machine{
+  position:relative;
+  height:300px;
+  width:100%;
+  border-radius:20px;
+  border:5px solid #ff4d6d;
+  background:linear-gradient(#fff,#ffe6ea);
+  overflow:hidden;
+}
+
+.claw{
+  position:absolute;
+  top:10px;
+  left:150px;
+  font-size:30px;
+  transition:top .3s;
+}
+
+/* HEART */
+.heart{
+  position:absolute;
+  font-size:28px;
+}
+
+/* BUTTON */
+.controls{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:10px;
+}
+
+.controls button{
+  width:100px;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  background:#ff4d6d;
+  color:white;
+}
+
+/* LETTER */
+#letterScreen p{
+  line-height:1.6;
+  padding:10px;
+}
+
+/* PHOTO */
+.photo-container{
+  position:relative;
+  height:320px;
+  width:100%;
+}
+
+.photo{
+  width:130px;
+  height:130px;
+  border-radius:18px;
+  object-fit:cover;
+  position:absolute;
+}
+
+.p1{top:20px;left:20px;animation:f1 6s ease-in-out infinite;}
+.p2{top:20px;right:20px;animation:f2 7s ease-in-out infinite;}
+.p3{bottom:20px;left:20px;animation:f3 6.5s ease-in-out infinite;}
+.p4{bottom:20px;right:20px;animation:f4 7.5s ease-in-out infinite;}
+
+@keyframes f1{50%{transform:translate(15px,-20px);}}
+@keyframes f2{50%{transform:translate(-15px,20px);}}
+@keyframes f3{50%{transform:translate(20px,15px);}}
+@keyframes f4{50%{transform:translate(-20px,-15px);}}
+
+/* WIN */
+.win-popup{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(255,77,109,.35);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  backdrop-filter:blur(5px);
+}
+
+.win-box{
+  background:#fff;
+  padding:20px;
+  border-radius:20px;
+  width:280px;
+}
+
+/* TIMER */
+#timer{
+  font-size:20px;
+  color:#ff4d6d;
+}
+
+#letters button{
+  width:50px;
+  height:50px;
+  margin:5px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<h2>Love Catcher 💖</h2>
+
+<!-- 🎵 MUSIC LOCAL (AMAN GITHUB) -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<!-- GAME -->
+<div id="gameScreen" class="page">
+<div class="machine" id="machine">
+<div class="claw" id="claw">🪝</div>
+</div>
+
+<div class="controls">
+<button onclick="move(-20)">⬅️</button>
+<button onclick="drop()">⬇️</button>
+<button onclick="move(20)">➡️</button>
+</div>
+
+<p id="result"></p>
+</div>
+
+<!-- LETTER -->
+<div id="letterScreen" class="page">
+<h2>Untuk Kamu ❤️</h2>
+
+<p>
+Terima kasih sudah hadir di hidupku,<br>
+bukan hanya di saat semuanya indah,<br>
+tapi juga saat aku masih belum punya apa-apa.<br><br>
+
+Kamu tetap memilih tinggal,<br>
+percaya padaku,<br>
+dan mencintaiku dengan tulus.<br><br>
+
+Aku mungkin datang dari nol,<br>
+tapi bersamamu…<br>
+aku yakin kita akan sampai ke titik yang kita impikan.<br><br>
+
+I love you ❤️
+</p>
+
+<button onclick="goWord()">Lanjut 💖</button>
+</div>
+
+<!-- WORD -->
+<div id="wordScreen" class="page">
+<h2>Cari & Susun Kata 💖</h2>
+
+<p>Temukan kata: <b>SAYANG</b></p>
+
+<p>Waktu: <span id="timer">10</span></p>
+
+<div id="wordBox" style="font-size:24px;"></div>
+<div id="letters"></div>
+
+<p id="wordResult"></p>
+</div>
+
+<!-- PHOTO -->
+<div id="photoScreen" class="page">
+<h2>Kenangan Kita ❤️</h2>
+
+<div class="photo-container">
+<img src="foto1.jpeg" class="photo p1">
+<img src="foto2.jpeg" class="photo p2">
+<img src="foto3.jpeg" class="photo p3">
+<img src="foto4.jpeg" class="photo p4">
+</div>
+</div>
+
+<!-- WIN -->
+<div id="winPopup" class="win-popup">
+<div class="win-box">
+<h2>🎉 Selamat!</h2>
+<p>Anda beruntung ❤️</p>
+<button onclick="next()">Lanjut</button>
+</div>
+</div>
+
+</div>
+
+<script>
+
+/* 🎵 MUSIC FIX (GITHUB SAFE) */
+let musicStarted = false;
+
+function startMusic(){
+  if(musicStarted) return;
+
+  const music = document.getElementById("bgMusic");
+  music.volume = 0.5;
+
+  music.play().then(()=>{
+    music.currentTime = 25; // feel "reff"
+  }).catch(e=>{
+    console.log("music blocked", e);
+  });
+
+  musicStarted = true;
+}
+
+document.addEventListener("click", startMusic);
+document.addEventListener("touchstart", startMusic);
+
+/* GAME */
+let claw=document.getElementById("claw");
+let x=150;
+let attempt=0;
+let running=true;
+
+let machine=document.getElementById("machine");
+
+for(let i=0;i<6;i++){
+ let h=document.createElement("div");
+ h.className="heart";
+ h.innerText="💖";
+ h.style.left=(50+i*40)+"px";
+ h.style.top="200px";
+ machine.appendChild(h);
+}
+
+function move(v){
+ if(!running)return;
+ x+=v;
+ x=Math.max(0,Math.min(300,x));
+ claw.style.left=x+"px";
+}
+
+function drop(){
+ if(!running)return;
+
+ running=false;
+ attempt++;
+
+ claw.style.top="200px";
+
+ setTimeout(()=>{
+
+  if(attempt<5){
+    document.getElementById("result").innerText="Miss 💔";
+    setTimeout(()=>{
+      claw.style.top="10px";
+      running=true;
+    },600);
+  }else{
+    document.getElementById("winPopup").style.display="flex";
+  }
+
+ },300);
+}
+
+function next(){
+ document.getElementById("winPopup").style.display="none";
+ show("letterScreen");
+}
+
+/* PAGE */
+function show(id){
+ document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+ document.getElementById(id).style.display="flex";
+}
+
+/* WORD GAME */
+let target="SAYANG";
+let current="";
+let time=10;
+let timer;
+
+function goWord(){
+ show("wordScreen");
+
+ let letters=target.split("").sort(()=>Math.random()-0.5);
+ let box=document.getElementById("letters");
+ box.innerHTML="";
+
+ current="";
+ time=10;
+
+ document.getElementById("timer").innerText=time;
+
+ clearInterval(timer);
+
+ timer=setInterval(()=>{
+  time--;
+  document.getElementById("timer").innerText=time;
+
+  if(time<=0){
+    clearInterval(timer);
+    goWord();
+  }
+ },1000);
+
+ letters.forEach(l=>{
+  let b=document.createElement("button");
+  b.innerText=l;
+
+  b.onclick=()=>{
+    current+=l;
+    document.getElementById("wordBox").innerText=current;
+    b.disabled=true;
+
+    if(current===target){
+      clearInterval(timer);
+      setTimeout(()=>show("photoScreen"),1000);
+    }
+  };
+
+  box.appendChild(b);
+ });
+}
+
+</script>
+
+</body>
+</html>
